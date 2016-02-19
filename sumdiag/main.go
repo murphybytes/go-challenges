@@ -4,6 +4,12 @@ import "fmt"
 
 // For matrix M of dimension n X n, let X = the sum of the diagonal [0,0]..[n-1, n-1]
 // and Y the sum of the diagonal [0, n-1] to [n-1,0]. Print |X-Y| to STDOUT
+// Usage: Enter the dimension of the matrix on the first line, then enter each
+// following row on a seperate line, for example a 3x3 matrix is as follows
+// 3
+// 1 0 0
+// 0 1 0
+// 0 0 1
 
 func sumdiags(m [][]int) (lr, rl int) {
 	jj := len(m) - 1
