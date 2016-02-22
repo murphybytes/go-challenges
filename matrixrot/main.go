@@ -1,103 +1,162 @@
 package main
 
+/*
+Matix rotation
+Reads input on stdin, first line is rows, columns and rotation moves
+Subsequent lines are each row of the matrix
+Example
+4 4 2
+1 2 3 4
+5 6 7 8
+9 10 11 12
+13 14 15 16
+
+Output
+3 4 8 12
+2 11 10 16
+1 7 6 15
+5 9 13 14
+*/
+
 import "fmt"
 
-func rot(m [][]int, n *[][]int, step int) {
-	if step > 1 {
-		return
-	}
+func rotate(m *[][]int, rows, cols, moves int) {
+	for layer := 0; ; layer++ {
+		currrows := rows - (2 * layer)
+		currcols := cols - (2 * layer)
 
-	firstcol := 0 + step
-	//	col := firstcol
-	firstrow := 0 + step
-	//	row := firstrow
-	lastrow := len(m) - step - 1
-	lastcol := len(m[0]) - step - 1
+		if currrows <= 0 || currcols <= 0 {
+			break
+		}
 
-	fmt.Printf("fc %d fr %d lr %d lc %d\n", firstcol, firstrow, lastrow, lastcol)
-
-	if firstcol >= lastcol || firstrow >= lastrow {
-		return
-	}
-
-	//saved := m[firstrow][firstcol]
-
-	//	var seed int
-	// down the first col
-	for i := firstrow + 1; i <= lastrow; i++ {
-		fmt.Printf("(%d,%d)\n", i, firstcol)
-
-		m[i][firstcol] = m[i-1][firstcol]
+		transform := getTransform(*m, currrows, currcols, layer, moves)
+		applyTransform(m, currrows, currcols, layer, transform)
 
 	}
+}
 
-	for i := firstcol + 1; i <= lastcol; i++ {
-		fmt.Printf("(%d,%d)\n", lastrow, i)
-		(*n)[lastrow][i] = m[lastrow][i-1]
-		//    *n[lastrow, i] = m[lastrow,firstcol]
+func getTransform(m [][]int, currrows, currcols, layer, moves int) []int {
+
+	elements := (2 * currrows) + (2 * (currcols - 2))
+	partition := make([]int, elements, elements)
+	partitionMoves := moves % elements
+	partitionIndex := 0
+
+	row := 0 + layer
+	col := 0 + layer
+
+	for ; row < currrows+layer; row++ {
+		insertion := (partitionIndex + partitionMoves) % elements
+
+		partition[insertion] = m[row][col]
+		partitionIndex++
+
 	}
 
-	for i := lastrow - 1; i >= firstrow; i-- {
-		fmt.Printf("(%d,%d)\n", i, lastcol)
-		(*n)[i][lastcol] = m[i+1][lastcol]
+	row = layer + currrows - 1
+	col = layer + 1
+
+	for ; col < currcols+layer; col++ {
+		insertion := (partitionIndex + partitionMoves) % elements
+		partition[insertion] = m[row][col]
+		partitionIndex++
 	}
 
-	for i := lastcol; i > firstcol; i-- {
-		fmt.Printf("(%d,%d) val %d\n", firstrow, i, m[firstrow][i])
-		(*n)[firstrow][i-1] = m[firstrow][i]
+	col = currcols + layer - 1
+	row = currrows + layer - 2
+
+	for ; row >= layer; row-- {
+		insertion := (partitionIndex + partitionMoves) % elements
+		partition[insertion] = m[row][col]
+		partitionIndex++
+
 	}
-	step++
-	fmt.Println("-----------------------------")
-	rot(m, n, step)
+
+	row = layer
+	col = currcols + layer - 2
+
+	for ; col > layer; col-- {
+		insertion := (partitionIndex + partitionMoves) % elements
+		partition[insertion] = m[row][col]
+		partitionIndex++
+	}
+
+	return partition
+}
+
+func applyTransform(m *[][]int, currrows, currcols, layer int, transform []int) {
+
+	curr := 0
+
+	row := 0 + layer
+	col := 0 + layer
+
+	fmt.Printf("row %d col %d\n", row, col)
+
+	for ; row < currrows+layer; row++ {
+		(*m)[row][col] = transform[curr]
+		curr++
+	}
+
+	row = layer + currrows - 1
+	col = layer + 1
+
+	for ; col < currcols+layer; col++ {
+		(*m)[row][col] = transform[curr]
+		curr++
+	}
+
+	col = currcols + layer - 1
+	row = currrows + layer - 2
+
+	for ; row >= layer; row-- {
+		(*m)[row][col] = transform[curr]
+		curr++
+	}
+
+	row = layer
+	col = currcols + layer - 2
+
+	for ; col > layer; col-- {
+		(*m)[row][col] = transform[curr]
+		curr++
+	}
 
 }
 
 func main() {
+	dims := make([]int, 3, 3)
+	intf := make([]interface{}, 3, 3)
+	for i := range intf {
+		intf[i] = &dims[i]
+	}
+	fmt.Scanln(intf...)
+	rows := dims[0]
+	cols := dims[1]
+	rot := dims[2]
 
-	m := [][]int{
-		{1, 2, 3, 4},
-		{5, 6, 7, 8},
-		{9, 10, 11, 12},
-		{13, 14, 15, 16},
+	m := make([][]int, 0, rows)
+
+	for i := 0; i < rows; i++ {
+		row := make([]int, cols, cols)
+		intf := make([]interface{}, cols, cols)
+		for j := range intf {
+			intf[j] = &row[j]
+		}
+		fmt.Scanln(intf...)
+		m = append(m, row)
 	}
 
-	n := [][]int{
-		{0, 0, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0, 0, 0},
-	}
+	rotate(&m, rows, cols, rot)
 
-	rot(m, &n, 0)
-
-	for _, row := range n {
-		for _, val := range row {
-			fmt.Printf("%d, ", val)
+	for row := range m {
+		for col := range m[row] {
+			if col > 0 {
+				fmt.Print(" ")
+			}
+			fmt.Print(m[row][col])
 		}
 		fmt.Println("")
 	}
-
-	// n := [][]int{
-	// 	{0, 0, 0, 0},
-	// 	{0, 0, 0, 0},
-	// 	{0, 0, 0, 0},
-	// 	{0, 0, 0, 0},
-	// 	{0, 0, 0, 0},
-	// }
-	//
-	// fmt.Println("START N")
-	// rot(n, nil, 0)
-	//
-	// o := [][]int{
-	// 	{0, 0, 0, 0, 0},
-	// 	{0, 0, 0, 0, 0},
-	// 	{0, 0, 0, 0, 0},
-	// 	{0, 0, 0, 0, 0},
-	// 	{0, 0, 0, 0, 0},
-	// }
-	//
-	// fmt.Println("START O")
-	//
-	// rot(o, nil, 0)
 
 }
