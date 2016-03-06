@@ -1,0 +1,103 @@
+50 100
+11011100101000000010001011010001001000011101010110
+11010101111001101011101011110010111101011011010001
+set_a 22 1
+get_c 14
+set_a 12 1
+set_a 45 1
+set_a 0 0
+get_c 42
+set_b 41 1
+set_b 44 0
+set_b 23 1
+get_c 7
+get_c 26
+set_b 43 1
+set_a 39 0
+set_a 3 1
+set_b 19 1
+get_c 47
+set_a 48 0
+set_a 10 1
+set_a 27 0
+get_c 25
+set_b 1 0
+set_b 7 0
+set_b 23 0
+set_b 10 1
+set_a 0 1
+set_a 40 1
+set_b 41 1
+set_b 5 0
+set_a 12 0
+set_b 35 1
+set_a 1 1
+set_b 33 1
+set_b 14 0
+set_a 31 1
+set_a 9 1
+set_a 47 1
+set_a 48 1
+get_c 46
+get_c 13
+set_b 47 0
+get_c 42
+set_b 1 0
+get_c 26
+get_c 45
+set_b 2 0
+get_c 30
+set_a 38 0
+get_c 30
+set_a 27 0
+get_c 2
+set_a 6 0
+set_a 2 0
+set_b 14 1
+set_b 11 0
+get_c 37
+set_a 20 1
+get_c 43
+set_a 22 0
+set_a 10 0
+get_c 10
+set_a 21 1
+set_a 19 0
+set_a 47 1
+set_a 23 1
+get_c 17
+set_a 23 1
+set_b 3 1
+set_b 14 0
+get_c 47
+get_c 8
+set_b 30 1
+get_c 23
+get_c 49
+get_c 26
+set_b 25 0
+set_b 25 1
+get_c 4
+get_c 34
+set_a 30 0
+set_b 0 0
+set_b 4 1
+get_c 34
+get_c 29
+get_c 25
+get_c 47
+set_a 22 0
+set_b 28 0
+get_c 42
+set_b 5 1
+get_c 47
+set_a 14 0
+set_b 34 1
+set_b 4 1
+set_a 3 1
+get_c 10
+get_c 44
+set_a 45 0
+get_c 29
+set_a 10 0
+set_a 9 0
