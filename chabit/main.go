@@ -6,73 +6,126 @@ package main
 import "fmt"
 
 const maxint = ^uint32(0)
+const bigmask = uint64(maxint)
 
-func setBit(idx int, x byte, num *[]byte) {
-	i := len(*num) - 1 - idx
-	(*num)[i] = x
+func setBit(idx int, x byte, num []uint32, cache []int64) {
+
+	chunk := len(num) - idx/32 - 1
+	shift := uint(idx % 32)
+	mask := uint32(1 << shift)
+	if num[chunk]&mask == mask {
+		if x == 0 {
+			cache[chunk] = -1
+		}
+	} else {
+		if x == 1 {
+			cache[chunk] = -1
+		}
+	}
+
+	if x == 1 {
+		num[chunk] |= mask
+	} else {
+		num[chunk] &= ^mask
+	}
+
 }
 
-func getBit(idx int, num []byte) byte {
-	i := len(num) - 1 - idx
-	return num[i]
+func getBit(idx int, num []uint32) byte {
+
+	chunk := len(num) - idx/32 - 1
+	shift := uint(idx % 32)
+	mask := uint32(1 << shift)
+	if (mask & num[chunk]) > uint32(0) {
+		return 1
+	}
+	return 0
 }
 
-func add(a, b []byte) []byte {
-	var carry byte
+func add(a, b []uint32, cache []int64) []uint32 {
+	var carry uint32
 	//resultLength := len(a)*2 + 1
-	res := make([]byte, len(a)+1, len(a)+1)
+	res := make([]uint32, len(a)+1, len(a)+1)
+
 	for i := len(a) - 1; i >= 0; i-- {
-		j := a[i] + b[i]
-		if j == 2 {
-			if carry == 1 {
-				res[i+1] = 1
-			} else {
-				res[i+1] = 0
-			}
-			carry = 1
+		if cache[i] != -1 {
+			res[i+1] = uint32(cache[i])
 			continue
 		}
-		if j == 1 {
-			if carry == 1 {
-				res[i] = 0
-			} else {
-				res[i+1] = 1
+
+		var sum uint64
+
+		sum = uint64(a[i] + b[i] + carry)
+
+		if sum > uint64(maxint) {
+			fmt.Println("carry")
+			carry = uint32(sum >> 32)
+			res[i+1] = uint32(sum & bigmask)
+			cache[i] = int64(res[i+1])
+			if i > 0 {
+				cache[i-1] = -1
 			}
-			continue
-		}
-		if j == 0 {
-			res[i+1] = carry
+		} else {
 			carry = 0
+			res[i+1] = uint32(sum)
+			cache[i] = int64(res[i+1])
 		}
 
 	}
+
 	res[0] = carry
+
 	return res
+
 }
+
 func bytes2String(b []byte) string {
+	cp := make([]byte, len(b), len(b))
 	for i := 0; i < len(b); i++ {
-		b[i] = b[i] + 48
+		cp[i] = b[i] + 48
 	}
-	return string(b)
+	return string(cp)
 }
 
-func string2Bytes(s string) []byte {
-	buff := []byte(s)
-	for i := 0; i < len(buff); i++ {
-		buff[i] = buff[i] - 48
+func getSeqBounds(currByte int, s string) (right int, left int) {
+	right = (currByte * 32) + len(s)%32
+	if currByte > 0 {
+		left = right - 32
+	}
+	return
+}
+
+func string2Ints(s string) []uint32 {
+	padding := 0
+	if len(s)%32 > 0 {
+		padding = 1
 	}
 
-	return buff
+	sz := len(s)/32 + padding
+	res := make([]uint32, sz, sz)
+	for bt := sz - 1; bt >= 0; bt-- {
+		right, left := getSeqBounds(bt, s)
+
+		shift := uint(0)
+		for i := right - 1; i >= left; i-- {
+			if s[i] == '1' {
+				res[bt] |= 1 << shift
+			}
+			shift++
+		}
+
+	}
+	return res
 }
 
 type problemReader interface {
-	getInitial() (q int, a, b []byte)
+	getInitial() (q int, a, b []uint32)
 	readOp() (op string, idx int, x byte)
 }
 
 type stdinReader struct {
 	n, q int
-	a, b []byte
+	a, b []uint32
 }
 
 func newStdinReader() problemReader {
@@ -82,14 +135,14 @@ func newStdinReader() problemReader {
 	fmt.Scanln(intfs...)
 	var s string
 	fmt.Scan(&s)
-	r.a = string2Bytes(s)
+	r.a = string2Ints(s)
 	fmt.Scan(&s)
-	r.b = string2Bytes(s)
+	r.b = string2Ints(s)
 
 	return r
 }
 
-func (r stdinReader) getInitial() (q int, a, b []byte) {
+func (r stdinReader) getInitial() (q int, a, b []uint32) {
 	return r.q, r.a, r.b
 }
 
@@ -102,25 +155,31 @@ func (r stdinReader) readOp() (op string, idx int, x byte) {
 	return
 }
 
-func run(reader problemReader) {
+func run(reader problemReader) (result string) {
 	q, a, b := reader.getInitial()
-	var result string
+	cache := make([]int64, len(a), len(a))
+	for k := range cache {
+		cache[k] = -1
+	}
+
 	for i := 0; i < q; i++ {
 		op, idx, x := reader.readOp()
 		switch op {
 		case "set_a":
-			setBit(idx, x, &a)
+			setBit(idx, x, a, cache)
 		case "set_b":
-			setBit(idx, x, &b)
+			setBit(idx, x, b, cache)
 		case "get_c":
-			c := add(a, b)
+			c := add(a, b, cache)
 			result += fmt.Sprint(getBit(idx, c))
 		}
+
 	}
-	fmt.Println(result)
+
+	return result
 }
 
 func main() {
 	reader := newStdinReader()
-	run(reader)
+	fmt.Println(run(reader))
 }
